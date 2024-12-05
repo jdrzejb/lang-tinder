@@ -267,6 +267,7 @@ function App() {
               background: "#eee",
               marginBottom: "20px",
               borderRadius: "8px",
+              padding: "20px",
             }}
           >
             <div>{i.name}</div>
