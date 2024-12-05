@@ -18,9 +18,7 @@ interface SwipeRecord {
 const STORAGE_KEY = "flashcardProgress";
 
 const App: React.FC = () => {
-  const [cards, setCards] = useState<CardData[]>(
-    words.map((w, i) => ({ id: i, ...w }))
-  );
+  const [cards, setCards] = useState<CardData[]>(words);
 
   const [stillToLearn, setStillToLearn] = useState<CardData[]>([]);
   const [learned, setLearned] = useState<CardData[]>([]);
@@ -29,16 +27,17 @@ const App: React.FC = () => {
 
   const handleSwipe = (direction: string, card: CardData) => {
     if (direction === "right") {
-      // Add card to stillToLearn
       setLearned((prev) => [...prev, card]);
     } else if (direction === "left") {
       setStillToLearn((prev) => [...prev, card]);
-      // Add card to learned
     }
 
     // Remove the swiped card from the main deck
     setCards((prev) => prev.filter((c) => c.id !== card.id));
-    setSwipeHistory((prev) => [...prev, { card, direction: direction as any }]);
+    setSwipeHistory((prev) => [
+      ...prev,
+      { card, direction: direction as "left" | "right" },
+    ]);
   };
 
   const handleGoBack = () => {
@@ -50,19 +49,16 @@ const App: React.FC = () => {
 
     console.log("Undoing last action:", lastAction);
 
-    // Undo the last action
     if (direction === "right") {
-      // The card was previously added to learned, remove it from learned
       setLearned((prev) => prev.filter((c) => c.id !== card.id));
     } else if (direction === "left") {
-      // The card was previously added to stillToLearn, remove it from there
       setStillToLearn((prev) => prev.filter((c) => c.id !== card.id));
     }
 
-    // Put the card back into the deck (on top)
-    setCards((prev) => [card, ...prev]);
+    setCards((prev) => [...prev, card]);
 
-    // Remove this action from history
+    console.log("Cards:", cards);
+
     setSwipeHistory((prev) => prev.slice(0, prev.length - 1));
   };
 
@@ -98,7 +94,7 @@ const App: React.FC = () => {
   const reset = () => {
     setStillToLearn([]);
     setLearned([]);
-    setCards(words.map((w, i) => ({ id: i, ...w })));
+    setCards(words);
     setSwipeHistory([]);
   };
 
@@ -121,7 +117,7 @@ const App: React.FC = () => {
         {cards.map((card) => (
           <TinderCard
             className="swiper-card"
-            key={card.id}
+            key={`${card.id}-${learned.length}-${stillToLearn.length}`}
             onSwipe={(dir: string) => handleSwipe(dir, card)}
             preventSwipe={["up", "down"]}
           >

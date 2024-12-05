@@ -19,7 +19,7 @@ export function speakText(text: string, lang: Lang) {
 
     // Optional: Set other properties
     utterance.pitch = 1; // Range: 0 to 2
-    utterance.rate = 1; // Range: 0.1 to 10
+    utterance.rate = 0.5; // Range: 0.1 to 10
     utterance.volume = 1; // Range: 0 to 1
     // Speak the text
     window.speechSynthesis.speak(utterance);
