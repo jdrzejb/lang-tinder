@@ -10,7 +10,10 @@ export function openDB(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const db = request.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
+        console.log("Creating object store");
         db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      } else {
+        console.log("Object store already exists");
       }
     };
     request.onsuccess = () => resolve(request.result);

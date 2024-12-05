@@ -24,15 +24,7 @@ const STORAGE_KEY = "flashcardProgress";
 
 // Sprawdza czy localStorage działa poprawnie
 function storageIsAvailable() {
-  try {
-    const testKey = "__storage_test__";
-    localStorage.setItem(testKey, testKey);
-    const result = localStorage.getItem(testKey) === testKey;
-    localStorage.removeItem(testKey);
-    return result;
-  } catch (e) {
-    return false;
-  }
+  return false;
 }
 
 const App: React.FC = () => {

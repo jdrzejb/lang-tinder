@@ -1,0 +1,8 @@
+{
+    "name": "Fiszki",
+    "short_name": "Fiszki",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#FFFFFF",
+    "theme_color": "#FFFFFF"
+  }
