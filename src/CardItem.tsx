@@ -19,7 +19,7 @@ const CardItem: FC<CardItemProps> = ({ foreign, english }) => {
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       <div
         onClick={handleClick}
-        onTouchEnd={handleClick}
+        onTouchStart={handleClick}
         style={{
           width: "300px",
           height: "400px",
