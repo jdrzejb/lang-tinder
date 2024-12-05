@@ -103,9 +103,11 @@ const App: React.FC = () => {
         Reset
       </button>
 
-      <div className="relative w-72 h-96 mt-6">
+      <div className="relative w-72 h-96 mt-6" style={{ touchAction: "pan-y" }}>
         {cards.slice(l - 3, l).map((card) => (
           <TinderCard
+            swipeRequirementType="position"
+            swipeThreshold={10}
             className="swiper-card absolute"
             key={`${card.id}-${learned.length}-${stillToLearn.length}`}
             onSwipe={(dir: string) => handleSwipe(dir, card)}
