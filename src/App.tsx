@@ -94,7 +94,7 @@ const App: React.FC = () => {
   const l = cards.length;
 
   return (
-    <div className="w-full h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+    <div className="w-full bg-gray-100 flex flex-col items-center justify-center p-4">
       <h1 className="text-2xl font-bold mb-4">Language Flashcards</h1>
       <button
         onClick={reset}
@@ -108,7 +108,7 @@ const App: React.FC = () => {
           <TinderCard
             swipeRequirementType="position"
             swipeThreshold={10}
-            className="swiper-card absolute"
+            className="absolute"
             key={`${card.id}-${learned.length}-${stillToLearn.length}`}
             onSwipe={(dir: string) => handleSwipe(dir, card)}
             preventSwipe={["up", "down"]}
@@ -128,7 +128,7 @@ const App: React.FC = () => {
         </button>
       </div>
 
-      <div className="mt-12 w-4/5 flex justify-between">
+      <div className="mt-12 w-4/5 justify-between">
         <div>
           <h2 className="text-xl font-semibold mb-2">Still To Learn</h2>
           <ul className="list-disc pl-6">
