@@ -15,41 +15,26 @@ const CardItem: FC<CardItemProps> = ({ foreign, english }) => {
     setIsFlipped(!isFlipped);
   };
 
+  const cardClasses =
+    "w-72 h-96 flex items-center justify-center border border-gray-300 rounded-lg text-2xl cursor-pointer select-none";
+
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
+      {/* Front side */}
       <div
         onClick={handleClick}
-        onTouchStart={handleClick}
-        style={{
-          width: "300px",
-          height: "400px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid #ccc",
-          borderRadius: "10px",
-          background: "#fff",
-          fontSize: "24px",
-          cursor: "pointer",
-        }}
+        onTouchEnd={handleClick}
+        className={`${cardClasses} bg-white`}
       >
         {foreign}
       </div>
 
+      {/* Back side */}
+
       <div
         onClick={handleClick}
-        style={{
-          width: "300px",
-          height: "400px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          border: "1px solid #ccc",
-          borderRadius: "10px",
-          background: "#fafafa",
-          fontSize: "24px",
-          cursor: "pointer",
-        }}
+        onTouchEnd={handleClick}
+        className={`${cardClasses} bg-gray-50`}
       >
         {english}
       </div>

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TinderCard from "react-tinder-card";
 import CardItem from "./CardItem";
-import "./App.css";
 import { words } from "./words";
 
 interface CardData {
@@ -19,7 +18,6 @@ const STORAGE_KEY = "flashcardProgress";
 
 const App: React.FC = () => {
   const [cards, setCards] = useState<CardData[]>(words);
-
   const [stillToLearn, setStillToLearn] = useState<CardData[]>([]);
   const [learned, setLearned] = useState<CardData[]>([]);
   const [initialized, setInitialized] = useState<boolean>(false);
@@ -47,8 +45,6 @@ const App: React.FC = () => {
     const lastAction = swipeHistory[swipeHistory.length - 1];
     const { card, direction } = lastAction;
 
-    console.log("Undoing last action:", lastAction);
-
     if (direction === "right") {
       setLearned((prev) => prev.filter((c) => c.id !== card.id));
     } else if (direction === "left") {
@@ -56,9 +52,6 @@ const App: React.FC = () => {
     }
 
     setCards((prev) => [...prev, card]);
-
-    console.log("Cards:", cards);
-
     setSwipeHistory((prev) => prev.slice(0, prev.length - 1));
   };
 
@@ -89,7 +82,7 @@ const App: React.FC = () => {
       learned,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [stillToLearn, learned]);
+  }, [stillToLearn, learned, initialized]);
 
   const reset = () => {
     setStillToLearn([]);
@@ -101,24 +94,19 @@ const App: React.FC = () => {
   const l = cards.length;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100vh",
-        background: "#f0f0f0",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <h1>Language Flashcards</h1>
-      <button onClick={reset}>Reset</button>
+    <div className="w-full h-screen bg-gray-100 flex flex-col items-center justify-center p-4">
+      <h1 className="text-2xl font-bold mb-4">Language Flashcards</h1>
+      <button
+        onClick={reset}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600"
+      >
+        Reset
+      </button>
 
-      <div style={{ position: "relative", width: "300px", height: "400px" }}>
+      <div className="relative w-72 h-96 mt-6">
         {cards.slice(l - 3, l).map((card) => (
           <TinderCard
-            className="swiper-card"
+            className="swiper-card absolute"
             key={`${card.id}-${learned.length}-${stillToLearn.length}`}
             onSwipe={(dir: string) => handleSwipe(dir, card)}
             preventSwipe={["up", "down"]}
@@ -128,23 +116,20 @@ const App: React.FC = () => {
         ))}
       </div>
 
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={handleGoBack} disabled={swipeHistory.length === 0}>
+      <div className="mt-5">
+        <button
+          onClick={handleGoBack}
+          disabled={swipeHistory.length === 0}
+          className="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 disabled:opacity-50"
+        >
           Go Back
         </button>
       </div>
 
-      <div
-        style={{
-          marginTop: "50px",
-          width: "80%",
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
+      <div className="mt-12 w-4/5 flex justify-between">
         <div>
-          <h2>Still To Learn</h2>
-          <ul>
+          <h2 className="text-xl font-semibold mb-2">Still To Learn</h2>
+          <ul className="list-disc pl-6">
             {stillToLearn.map((item) => (
               <li key={item.id}>
                 {item.translated} ({item.org})
@@ -154,8 +139,8 @@ const App: React.FC = () => {
         </div>
 
         <div>
-          <h2>Learned</h2>
-          <ul>
+          <h2 className="text-xl font-semibold mb-2">Learned</h2>
+          <ul className="list-disc pl-6">
             {learned.map((item) => (
               <li key={item.id}>
                 {item.translated} ({item.org})
