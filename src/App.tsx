@@ -229,7 +229,21 @@ function App() {
       const utterance = new SpeechSynthesisUtterance(text);
 
       // Optional: Set the language (e.g., 'en-US')
-      utterance.lang = "pl-PL";
+      // Attempt to select a Polish voice
+      const voices = window.speechSynthesis.getVoices();
+      const polishVoices = voices.filter((voice) =>
+        voice.lang.startsWith("pl")
+      );
+
+      if (polishVoices.length > 0) {
+        utterance.voice = polishVoices[0]; // Select the first available Polish voice
+        console.log(
+          `Wybrano głos: ${utterance.voice.name} (${utterance.voice.lang})`
+        );
+      } else {
+        alert("Polski głos nie jest dostępny w Twojej przeglądarce/SYSTEMIE.");
+        return;
+      }
 
       // Optional: Set other properties
       utterance.pitch = 1; // Range: 0 to 2
