@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import TinderCard from "react-tinder-card";
 import CardItem from "./CardItem";
 import { words } from "./words";
+import { loadFromIndexedDB, saveToIndexedDB } from "./db";
 
-interface CardData {
+export interface CardData {
   id: number;
   translated: string;
   org: string;
@@ -14,7 +15,25 @@ interface SwipeRecord {
   direction: "left" | "right";
 }
 
+export interface SavedData {
+  stillToLearn: CardData[];
+  learned: CardData[];
+}
+
 const STORAGE_KEY = "flashcardProgress";
+
+// Sprawdza czy localStorage działa poprawnie
+function storageIsAvailable() {
+  try {
+    const testKey = "__storage_test__";
+    localStorage.setItem(testKey, testKey);
+    const result = localStorage.getItem(testKey) === testKey;
+    localStorage.removeItem(testKey);
+    return false;
+  } catch (e) {
+    return false;
+  }
+}
 
 const App: React.FC = () => {
   const [cards, setCards] = useState<CardData[]>(words);
@@ -22,6 +41,7 @@ const App: React.FC = () => {
   const [learned, setLearned] = useState<CardData[]>([]);
   const [initialized, setInitialized] = useState<boolean>(false);
   const [swipeHistory, setSwipeHistory] = useState<SwipeRecord[]>([]);
+  const [useLocal, setUseLocal] = useState<boolean>(true);
 
   const handleSwipe = (direction: string, card: CardData) => {
     if (direction === "right") {
@@ -30,7 +50,7 @@ const App: React.FC = () => {
       setStillToLearn((prev) => [...prev, card]);
     }
 
-    // Remove the swiped card from the main deck
+    // Usuwa przeciągniętą kartę z głównej talii
     setCards((prev) => prev.filter((c) => c.id !== card.id));
     setSwipeHistory((prev) => [
       ...prev,
@@ -41,7 +61,7 @@ const App: React.FC = () => {
   const handleGoBack = () => {
     if (swipeHistory.length === 0) return;
 
-    // Get the last swipe action
+    // Ostatnia akcja przeciągnięcia
     const lastAction = swipeHistory[swipeHistory.length - 1];
     const { card, direction } = lastAction;
 
@@ -55,39 +75,72 @@ const App: React.FC = () => {
     setSwipeHistory((prev) => prev.slice(0, prev.length - 1));
   };
 
-  // Load data from localStorage on mount
+  // Ładuje dane z localStorage przy starcie
   useEffect(() => {
-    const savedData = localStorage.getItem(STORAGE_KEY);
-    if (savedData) {
-      const { stillToLearn: savedStillToLearn, learned: savedLearned } =
-        JSON.parse(savedData) as {
-          stillToLearn: CardData[];
-          learned: CardData[];
-        };
-      setStillToLearn(savedStillToLearn);
-      setLearned(savedLearned);
-      setCards((prev) => {
-        const allCards = [...savedStillToLearn, ...savedLearned];
-        return prev.filter((card) => !allCards.some((c) => c.id === card.id));
-      });
+    const canUseLocalStorage = storageIsAvailable();
+    setUseLocal(false);
+
+    (async () => {
+      if (canUseLocalStorage) {
+        // Próba ładowania z localStorage
+        const savedDataStr = localStorage.getItem(STORAGE_KEY);
+        if (savedDataStr) {
+          const { stillToLearn: stl, learned: l } = JSON.parse(savedDataStr);
+          setStillToLearn(stl);
+          setLearned(l);
+          setCards((prev) =>
+            prev.filter((card) => ![...stl, ...l].some((c) => c.id === card.id))
+          );
+        }
+      } else {
+        // Ładowanie z IndexedDB
+        const savedData = await loadFromIndexedDB();
+        if (savedData) {
+          const { stillToLearn: stl, learned: l } = savedData;
+          setStillToLearn(stl);
+          setLearned(l);
+          setCards((prev) =>
+            prev.filter((card) => ![...stl, ...l].some((c) => c.id === card.id))
+          );
+        }
+      }
       setInitialized(true);
-    }
+    })();
   }, []);
 
-  // Save data to localStorage whenever stillToLearn or learned changes
   useEffect(() => {
     if (!initialized) return;
-    const dataToSave = {
+
+    const dataToSave: SavedData = {
       stillToLearn,
       learned,
     };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-  }, [stillToLearn, learned, initialized]);
+
+    if (useLocal) {
+      // LocalStorage
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      } catch (error) {
+        console.error("Błąd zapisu do localStorage:", error);
+      }
+    } else {
+      // IndexedDB fallback
+      saveToIndexedDB(dataToSave).catch((err) =>
+        console.error("Błąd zapisu do IndexedDB:", err)
+      );
+    }
+  }, [stillToLearn, learned, initialized, useLocal]);
 
   const reset = () => {
     setStillToLearn([]);
     setLearned([]);
     setCards(words);
+  };
+
+  // Funkcja do rozpoczęcia od słówek do nauki
+  const resumeFromStillToLearn = () => {
+    setCards(stillToLearn);
+    setStillToLearn([]);
     setSwipeHistory([]);
   };
 
@@ -95,13 +148,22 @@ const App: React.FC = () => {
 
   return (
     <div className="w-full bg-gray-100 flex flex-col items-center justify-center p-4">
-      <h1 className="text-2xl font-bold mb-4">Language Flashcards</h1>
-      <button
-        onClick={reset}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600"
-      >
-        Reset
-      </button>
+      <h1 className="text-2xl font-bold mb-4">Fiszki językowe</h1>
+      <div className="flex gap-4 mb-6">
+        <button
+          onClick={reset}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600"
+        >
+          Zresetuj
+        </button>
+        <button
+          onClick={resumeFromStillToLearn}
+          disabled={stillToLearn.length === 0}
+          className="px-4 py-2 bg-orange-500 text-white rounded-md shadow-sm hover:bg-orange-600 disabled:opacity-50"
+        >
+          Wznów od słówek do nauki
+        </button>
+      </div>
 
       <div className="relative w-72 h-96 mt-6" style={{ touchAction: "pan-y" }}>
         {cards.slice(l - 3, l).map((card) => (
@@ -116,6 +178,12 @@ const App: React.FC = () => {
             <CardItem foreign={card.translated} english={card.org} />
           </TinderCard>
         ))}
+
+        {l === 0 && (
+          <div className="absolute w-full h-full flex items-center justify-center bg-gray-200 rounded-lg">
+            <h2 className="text-xl font-semibold">Brak kart!</h2>
+          </div>
+        )}
       </div>
 
       <div className="mt-5">
@@ -124,13 +192,13 @@ const App: React.FC = () => {
           disabled={swipeHistory.length === 0}
           className="px-4 py-2 bg-green-500 text-white rounded-md shadow-sm hover:bg-green-600 disabled:opacity-50"
         >
-          Go Back
+          Cofnij
         </button>
       </div>
 
       <div className="mt-12 w-4/5 justify-between">
         <div>
-          <h2 className="text-xl font-semibold mb-2">Still To Learn</h2>
+          <h2 className="text-xl font-semibold mb-2">Do nauczenia</h2>
           <ul className="list-disc pl-6">
             {stillToLearn.map((item) => (
               <li key={item.id}>
@@ -141,7 +209,7 @@ const App: React.FC = () => {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-2">Learned</h2>
+          <h2 className="text-xl font-semibold mb-2">Nauczone</h2>
           <ul className="list-disc pl-6">
             {learned.map((item) => (
               <li key={item.id}>
