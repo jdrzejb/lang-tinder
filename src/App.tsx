@@ -98,6 +98,8 @@ const App: React.FC = () => {
     setSwipeHistory([]);
   };
 
+  const l = cards.length;
+
   return (
     <div
       style={{
@@ -114,7 +116,7 @@ const App: React.FC = () => {
       <button onClick={reset}>Reset</button>
 
       <div style={{ position: "relative", width: "300px", height: "400px" }}>
-        {cards.map((card) => (
+        {cards.slice(l - 3, l).map((card) => (
           <TinderCard
             className="swiper-card"
             key={`${card.id}-${learned.length}-${stillToLearn.length}`}
