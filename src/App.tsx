@@ -29,7 +29,7 @@ function storageIsAvailable() {
     localStorage.setItem(testKey, testKey);
     const result = localStorage.getItem(testKey) === testKey;
     localStorage.removeItem(testKey);
-    return false;
+    return result;
   } catch (e) {
     return false;
   }
